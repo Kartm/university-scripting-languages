@@ -1,4 +1,3 @@
-import math
 import sys
 import logging
 
@@ -84,3 +83,9 @@ def run():
 
 if __name__ == "__main__":
     run()
+
+# Explain: which of the above functions can be called multiple times, and which not? Why?
+
+# All above functions except:
+# * read_log() because it requires a standard input which needs to be supplied every time it is called
+# * run() because it uses read_log()
