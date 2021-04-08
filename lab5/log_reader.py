@@ -112,6 +112,8 @@ def run():
     required_fields = ["log_file_name", "http_request_method", "logging_level", "log_page_size", "welcome_text"]
 
     config = read_config(required_fields)
+
+    print(config.get("welcome_text"))
     log_dict = read_log(config.get("log_file_name"))
     # print(log_dict)
 
