@@ -1,8 +1,14 @@
 import json
 import sys
+import logging
 from collections import defaultdict
 from json import JSONDecodeError
 from typing import List
+
+
+logger = logging.getLogger('lab5')
+ch = logging.StreamHandler()
+logger.addHandler(ch)
 
 
 def read_file(path: str):
@@ -108,12 +114,35 @@ def read_config(required_fields: List[str]):
         sys.exit(0)
 
 
+def print_welcome_message(message: str):
+    print(message)
+
+
+def set_logging_level(logging_level: str):
+    def logging_to_number(x):
+        return {
+            'CRITICAL': 50,
+            'ERROR': 40,
+            'WARNING': 30,
+            'INFO': 20,
+            'DEBUG': 10,
+        }.get(x, 0)  # 0 is default log level (NOTSET)
+
+    converted_logging_level = logging_to_number(logging_level)
+
+    logger.setLevel(converted_logging_level)
+    ch.setLevel(converted_logging_level)
+
+
 def run():
     required_fields = ["log_file_name", "http_request_method", "logging_level", "log_page_size", "welcome_text"]
 
     config = read_config(required_fields)
 
-    print(config.get("welcome_text"))
+    print_welcome_message(config.get("welcome_text"))
+    set_logging_level(config.get("logging_level"))
+
+
     log_dict = read_log(config.get("log_file_name"))
     # print(log_dict)
 
