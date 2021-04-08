@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 import logging
 from collections import defaultdict
@@ -134,6 +135,30 @@ def set_logging_level(logging_level: str):
     ch.setLevel(converted_logging_level)
 
 
+def print_all_index_requests(log_dict: dict):
+    all_requests = set()
+
+    expected_path = "/index.html"
+
+    for k, v in log_dict.items():
+        for entry in v:
+            all_requests.add(get_request_string(entry))
+
+    for request_string in all_requests:
+        try:
+            METHOD = 0
+            PATH = 1
+
+            request = request_string.split(" ")
+            request_method = request[METHOD]
+            request_path = request[PATH]
+
+            if request_path == expected_path:
+                print(f"{request_method} {request_path}")
+        except:
+            pass
+
+
 def run():
     required_fields = ["log_file_name", "http_request_method", "logging_level", "log_page_size", "welcome_text"]
 
@@ -144,6 +169,11 @@ def run():
 
 
     log_dict = read_log(config.get("log_file_name"))
+    ### lab5 code below ###
+    # 4)
+    print(print_all_index_requests(log_dict))
+
+    ### lab4 code below ###
     # print(log_dict)
 
     # 5)
