@@ -133,6 +133,38 @@ def set_logging_level(logging_level: str):
 
 def get_requests_to_print(
         log_dict: dict,
+        http_request_method=None,
+):
+    all_requests = set()
+
+    for k, v in log_dict.items():
+        for entry in v:
+            all_requests.add(get_request_string(entry))
+
+    data_to_print = list()
+
+    for request_string in all_requests:
+        try:
+            METHOD = 0
+            PATH = 1
+
+            request = request_string.split(" ")
+            request_method = request[METHOD]
+            request_path = request[PATH]
+
+            if request_path == "/index.html":
+                if http_request_method is not None and http_request_method != request_method:
+                    continue
+
+                data_to_print.append(f"{request_method} {request_path}")
+        except:
+            pass
+
+    return data_to_print
+
+
+def get_custom_requests_to_print(
+        log_dict: dict,
         resource_path="/index.html",
         http_request_method=None,
 ):
@@ -197,13 +229,21 @@ def run():
     # 5)
     requests_to_print = get_requests_to_print(
         log_dict,
+        http_request_method=config.get("http_request_method"),
+    )
+
+    log_page_size = config.get("log_page_size")
+    print_list_paginated(requests_to_print, log_page_size)
+
+    # my own function processing the log
+    custom_requests_to_print = get_custom_requests_to_print(
+        log_dict,
         resource_path=config.get("resource_path"),
         http_request_method=config.get("http_request_method"),
     )
 
     log_page_size = config.get("log_page_size")
-    log_page_size = 1
-    print_list_paginated(requests_to_print, log_page_size)
+    print_list_paginated(custom_requests_to_print, log_page_size)
 
     ### lab4 code below ###
     # print(log_dict)
