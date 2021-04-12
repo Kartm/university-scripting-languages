@@ -210,7 +210,6 @@ def print_list_paginated(list_to_print: List, page_size: None):
     print("[END]")
 
 
-
 def run():
     required_fields = ["log_file_name", "http_request_method", "logging_level", "log_page_size", "resource_path"]
 
