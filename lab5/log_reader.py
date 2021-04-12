@@ -245,25 +245,8 @@ def run():
     log_page_size = config.get("log_page_size")
     print_list_paginated(custom_requests_to_print, log_page_size)
 
-    ### lab4 code below ###
-    # print(log_dict)
-
-    # 5)
-    # keeps number of requests per ip address
-    # ip_requests_number_dict = ip_requests_number(log_dict)
-    # print(ip_requests_number_dict)
-
-    # 6)
-    # most active IP addresses
-    # print(ip_find(ip_requests_number_dict))
-    # least active IP addresses
-    # print(ip_find(ip_requests_number_dict, most_active=False))
-
-    # 7)
-    # print(longest_request(log_dict))
-
-    # 8)
-    # print(list(non_existent(log_dict)))
+    # Where would you use assertions in your application?
+    # When debugging. I would add some assertions that I would guess to break
 
 
 if __name__ == "__main__":
