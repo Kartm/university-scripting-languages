@@ -115,10 +115,6 @@ def read_config(required_fields: List[str]):
         sys.exit(0)
 
 
-def print_welcome_message(message: str):
-    print(message)
-
-
 def set_logging_level(logging_level: str):
     def logging_to_number(x):
         return {
@@ -135,14 +131,18 @@ def set_logging_level(logging_level: str):
     ch.setLevel(converted_logging_level)
 
 
-def print_all_index_requests(log_dict: dict):
+def get_requests_to_print(
+        log_dict: dict,
+        resource_path="/index.html",
+        http_request_method=None,
+):
     all_requests = set()
-
-    expected_path = "/index.html"
 
     for k, v in log_dict.items():
         for entry in v:
             all_requests.add(get_request_string(entry))
+
+    data_to_print = list()
 
     for request_string in all_requests:
         try:
@@ -153,25 +153,57 @@ def print_all_index_requests(log_dict: dict):
             request_method = request[METHOD]
             request_path = request[PATH]
 
-            if request_path == expected_path:
-                print(f"{request_method} {request_path}")
+            if request_path == resource_path:
+                if http_request_method is not None and http_request_method != request_method:
+                    continue
+
+                data_to_print.append(f"{request_method} {request_path}")
         except:
             pass
 
+    return data_to_print
+
+
+def print_list_paginated(list_to_print: List, page_size: None):
+    if page_size <= 0:
+        raise ValueError(f"Page size has to be greater than 0.")
+
+    print("[START]")
+    for i, line in enumerate(list_to_print):
+        if i % page_size == 0 and i != 0:
+            input("Press ENTER to show more.")
+            print(line)
+        else:
+            print(line)
+    print("[END]")
+
+
 
 def run():
-    required_fields = ["log_file_name", "http_request_method", "logging_level", "log_page_size", "welcome_text"]
+    required_fields = ["log_file_name", "http_request_method", "logging_level", "log_page_size", "resource_path"]
 
     config = read_config(required_fields)
 
-    print_welcome_message(config.get("welcome_text"))
     set_logging_level(config.get("logging_level"))
-
 
     log_dict = read_log(config.get("log_file_name"))
     ### lab5 code below ###
     # 4)
-    print(print_all_index_requests(log_dict))
+    # print_requests(
+    #     log_dict,
+    #     resource_path="/index.html",
+    # )
+
+    # 5)
+    requests_to_print = get_requests_to_print(
+        log_dict,
+        resource_path=config.get("resource_path"),
+        http_request_method=config.get("http_request_method"),
+    )
+
+    log_page_size = config.get("log_page_size")
+    log_page_size = 1
+    print_list_paginated(requests_to_print, log_page_size)
 
     ### lab4 code below ###
     # print(log_dict)

@@ -36,8 +36,8 @@ def retrieve_log_page_size():
     return int(result)
 
 
-def retrieve_welcome_text():
-    return input(f"Welcome text: ")
+def retrieve_resource_path():
+    return input(f"Resource path: ")
 
 
 def run():
@@ -46,7 +46,7 @@ def run():
         "http_request_method": retrieve_http_request_method(),
         "logging_level": retrieve_logging_level(),
         "log_page_size": retrieve_log_page_size(),
-        "welcome_text": retrieve_welcome_text()
+        "resource_path": retrieve_resource_path()
     }
 
     with open('config.json', 'w', encoding='utf-8') as f:
