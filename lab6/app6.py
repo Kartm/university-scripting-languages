@@ -168,6 +168,16 @@ def print_list_paginated(list_to_print: List, page_size=None):
     print("[END]")
 
 
+def get_total_bytes_sent(parsed_log_lines: List, request_method: str):
+    result = 0
+
+    for line in parsed_log_lines:
+        if re.match(rf"^({request_method})", line[2]):
+            result += line[4] if line[4] else 0
+
+    return result
+
+
 def run():
     read_config()
     set_logging_level(logging_level_str)
@@ -184,7 +194,10 @@ def run():
     # print(parsed_log_lines)
 
     subnet_log_lines = get_subnet_log_lines(parsed_log_lines)
-    print_list_paginated(subnet_log_lines, display_settings.get('lines'))
+    # print_list_paginated(subnet_log_lines, display_settings.get('lines'))
+
+    total_bytes_sent = get_total_bytes_sent(parsed_log_lines, display_settings.get('filter'))
+    print(f"Request method {display_settings.get('filter')} {display_settings.get('separator')} {total_bytes_sent} bytes sent in total")
 
 
 if __name__ == "__main__":
