@@ -1,6 +1,9 @@
+import datetime
 import re
 import sys
 import logging
+from time import strptime
+from typing import List
 
 logger = logging.getLogger('lab5')
 ch = logging.StreamHandler()
@@ -89,6 +92,43 @@ def read_log(log_path: str):
         sys.exit(0)
 
 
+def parse_log_lines(log_lines: List):
+    parsed_data = list()
+
+    # source - https://stackoverflow.com/a/47095348
+    HOST = r'^(?P<ip_address>.*?)'
+    SPACE = r'\s'
+    IDENTITY = r'\S+'
+    USER = r'\S+'
+    TIME = r'(?P<timestamp>\[.*?\])'
+    REQUEST = r'\"(?P<request_method>.*?)\"'
+    STATUS = r'(?P<status_code>\d{3})'
+    SIZE = r'(?P<response_size>\S+)'
+
+    REGEX = HOST + SPACE + IDENTITY + SPACE + USER + SPACE + TIME + SPACE + REQUEST + SPACE + STATUS + SPACE + SIZE + SPACE
+
+    for line in log_lines:
+        match = re.search(REGEX, line)
+
+        ip_address = match.group('ip_address')
+        timestamp = strptime(match.group('timestamp'), "[%d/%b/%Y:%H:%M:%S %z]")
+        request_method = match.group('request_method')
+        status_code = int(match.group('status_code'))
+
+        response_size_str = match.group('response_size')
+        response_size = int(match.group('response_size')) if response_size_str != "-" else None
+
+        parsed_data.append({
+            'ip_address': ip_address,
+            'timestamp': timestamp,
+            'request_method': request_method,
+            'status_code': status_code,
+            'response_size': response_size,
+        })
+
+    return parsed_data
+
+
 def run():
     read_config()
     set_logging_level(logging_level_str)
@@ -99,7 +139,10 @@ def run():
     # print(logger.level)
 
     log_lines = read_log(log_file_name)
-    print(log_lines)
+    # print(log_lines)
+
+    parsed_log_lines = parse_log_lines(log_lines)
+    print(parsed_log_lines)
 
 
 if __name__ == "__main__":
