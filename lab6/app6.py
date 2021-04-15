@@ -105,20 +105,25 @@ def parse_log_lines(log_lines: List):
     STATUS = r'(?P<status_code>\d{3})'
     SIZE = r'(?P<response_size>\S+)'
 
-    REGEX = HOST + SPACE + IDENTITY + SPACE + USER + SPACE + TIME + SPACE + REQUEST + SPACE + STATUS + SPACE + SIZE + SPACE
+    REGEX = HOST + SPACE + IDENTITY + SPACE + USER + SPACE + TIME + \
+        SPACE + REQUEST + SPACE + STATUS + SPACE + SIZE + SPACE
 
     for line in log_lines:
         match = re.search(REGEX, line)
 
         ip_address = match.group('ip_address')
-        timestamp = strptime(match.group('timestamp'), "[%d/%b/%Y:%H:%M:%S %z]")
+        timestamp = strptime(match.group('timestamp'),
+                             "[%d/%b/%Y:%H:%M:%S %z]")
         request_method = match.group('request_method')
         status_code = int(match.group('status_code'))
 
         response_size_str = match.group('response_size')
-        response_size = int(match.group('response_size')) if response_size_str != "-" else None
+        response_size = int(match.group('response_size'))\
+            if response_size_str != "-" else None
 
-        parsed_data.append((ip_address, timestamp, request_method, status_code, response_size))
+        parsed_data.append(
+            (ip_address, timestamp, request_method,
+             status_code, response_size))
 
     return parsed_data
 
@@ -151,7 +156,8 @@ def get_subnet_log_lines(parsed_log_lines: List):
     # random network from the log file
     network_ip = "192.240.0.0"
 
-    return [line for line in parsed_log_lines if is_host_in_network(line[0], network_ip, 13)]
+    return [line for line in parsed_log_lines
+            if is_host_in_network(line[0], network_ip, 13)]
 
 
 def print_list_paginated(list_to_print: List, page_size=None):
@@ -196,9 +202,26 @@ def run():
     subnet_log_lines = get_subnet_log_lines(parsed_log_lines)
     # print_list_paginated(subnet_log_lines, display_settings.get('lines'))
 
-    total_bytes_sent = get_total_bytes_sent(parsed_log_lines, display_settings.get('filter'))
-    print(f"Request method {display_settings.get('filter')} {display_settings.get('separator')} {total_bytes_sent} bytes sent in total")
+    total_bytes_sent = get_total_bytes_sent(
+        parsed_log_lines, display_settings.get('filter'))
+    print(
+        f"Request method {display_settings.get('filter')} "
+        f"{display_settings.get('separator')} {total_bytes_sent}"
+        f" bytes sent in total")
 
 
 if __name__ == "__main__":
     run()
+
+# First run of pycodestyle:
+# (venv) ➜  lab6 git:(main) ✗ pycodestyle app6.py
+# app6.py:108:80: E501 line too long (123 > 79 characters)
+# app6.py:114:80: E501 line too long (80 > 79 characters)
+# app6.py:119:80: E501 line too long (95 > 79 characters)
+# app6.py:121:80: E501 line too long (95 > 79 characters)
+# app6.py:154:80: E501 line too long (93 > 79 characters)
+# app6.py:199:80: E501 line too long (93 > 79 characters)
+# app6.py:200:80: E501 line too long (136 > 79 characters)
+
+# Last run of pycodestyle:
+# - (empty)
