@@ -123,6 +123,35 @@ def parse_log_lines(log_lines: List):
     return parsed_data
 
 
+def is_host_in_network(host_ip: str, network_ip: str, mask_size: int):
+    return False
+
+
+def get_subnet_log_lines(parsed_log_lines: List):
+    # subnet mask length:
+    # 254597 % 16 + 8 = 13
+    # 11111111.11111000.00000000.00000000
+
+    # random network from the log file
+    network_ip = "192.240.0.0"
+
+    return [line for line in parsed_log_lines if is_host_in_network(line[0], network_ip, 13)]
+
+
+def print_list_paginated(list_to_print: List, page_size=None):
+    if page_size <= 0:
+        raise ValueError(f"Page size has to be greater than 0.")
+
+    print("[START]")
+    for i, line in enumerate(list_to_print):
+        if i % page_size == 0 and i != 0:
+            input("Press ENTER to show more.")
+            print(line)
+        else:
+            print(line)
+    print("[END]")
+
+
 def run():
     read_config()
     set_logging_level(logging_level_str)
@@ -136,7 +165,10 @@ def run():
     # print(log_lines)
 
     parsed_log_lines = parse_log_lines(log_lines)
-    print(parsed_log_lines)
+    # print(parsed_log_lines)
+
+    subnet_log_lines = get_subnet_log_lines(parsed_log_lines)
+    print_list_paginated(subnet_log_lines, display_settings.get('lines'))
 
 
 if __name__ == "__main__":
