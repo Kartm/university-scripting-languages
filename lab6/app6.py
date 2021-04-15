@@ -123,8 +123,24 @@ def parse_log_lines(log_lines: List):
     return parsed_data
 
 
+def ip_int_to_binary_string(ip_address: str):
+    result = ''
+
+    for octet in ip_address.split("."):
+        result += '{:08b}'.format(int(octet))
+
+    return result
+
+
 def is_host_in_network(host_ip: str, network_ip: str, mask_size: int):
-    return False
+    host = ip_int_to_binary_string(host_ip)
+    network = ip_int_to_binary_string(network_ip)
+
+    for i in range(0, mask_size):
+        if host[i] is not network[i]:
+            return False
+
+    return True
 
 
 def get_subnet_log_lines(parsed_log_lines: List):
