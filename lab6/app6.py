@@ -118,13 +118,7 @@ def parse_log_lines(log_lines: List):
         response_size_str = match.group('response_size')
         response_size = int(match.group('response_size')) if response_size_str != "-" else None
 
-        parsed_data.append({
-            'ip_address': ip_address,
-            'timestamp': timestamp,
-            'request_method': request_method,
-            'status_code': status_code,
-            'response_size': response_size,
-        })
+        parsed_data.append((ip_address, timestamp, request_method, status_code, response_size))
 
     return parsed_data
 
