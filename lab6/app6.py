@@ -7,7 +7,7 @@ ch = logging.StreamHandler()
 logger.addHandler(ch)
 
 defaults = {
-    'name': 'log.txt',
+    'log_file_name': 'access_log-20201025.txt',
     'logging_level_str': 'DEBUG',
     'display_settings': {
         'lines': 6,
@@ -33,7 +33,7 @@ def set_logging_level(logging_level: str):
     ch.setLevel(converted_logging_level)
 
 
-log_file_name = defaults.get('name')
+log_file_name = defaults.get('log_file_name')
 logging_level_str = defaults.get('logging_level_str')
 display_settings = defaults.get('display_settings')
 
@@ -65,14 +65,41 @@ def read_config():
         sys.exit(0)
 
 
+def read_file(path: str):
+    with open(path) as f:
+        content = f.read()
+        return content
+
+
+def read_log(log_path: str):
+    log_lines = list()
+
+    try:
+        file_content = read_file(log_path)
+        lines = file_content.split('\n')
+
+        for line in lines:
+            # check if line not empty
+            if line:
+                log_lines.append(line)
+
+        return log_lines
+    except FileNotFoundError:
+        print('Error: Log file not found.')
+        sys.exit(0)
+
+
 def run():
     read_config()
     set_logging_level(logging_level_str)
 
-    print(log_file_name)
-    print(display_settings)
+    # print(log_file_name)
+    # print(display_settings)
+    #
+    # print(logger.level)
 
-    print(logger.level)
+    log_lines = read_log(log_file_name)
+    print(log_lines)
 
 
 if __name__ == "__main__":
