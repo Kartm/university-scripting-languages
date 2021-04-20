@@ -4,6 +4,8 @@ from datetime import datetime
 
 
 # source - https://stackoverflow.com/a/47095348
+import pytz
+
 HOST = r'^(?P<ip_address>.*?)'
 SPACE = r'\s'
 IDENTITY = r'\S+'
@@ -93,8 +95,22 @@ class MyLogEntry:
         return f"{self.ip_address} {self.timestamp} {self.http_request}"
 
 
+def get_requests_between(logs, start: datetime, end: datetime):
+    if start > end:
+        raise ValueError("Start time cannot be earlier than end time.")
+
+    return list(filter(lambda log: log.timestamp >= start and log.timestamp <= end, logs))
+
+
 def run():
-    print(log_entries_from_file("access_log-20201025.txt")[0])
+    entries = log_entries_from_file("access_log-20201025.txt")
+    # print(entries[0])
+
+    start = datetime(2020, 10, 20, tzinfo=pytz.UTC)
+    end = datetime(2020, 10, 21, tzinfo=pytz.UTC)
+
+    # for log in get_requests_between(entries, start, end):
+    #     print(log)
 
 
 if __name__ == "__main__":
