@@ -1,3 +1,4 @@
+import csv
 import sys
 
 
@@ -13,9 +14,23 @@ def get_dataset_path():
     sys.exit(0)
 
 
+def read_csv_file(path: str):
+    with open(path) as f:
+        return csv.reader(f, delimiter=' ', quotechar='|')
+
+
+def read_dataset(path: str):
+    try:
+        return read_csv_file(path)
+    except FileNotFoundError:
+        print('Error: Log file not found.')
+        sys.exit(0)
+
+
 def run():
     dataset_path = get_dataset_path()
-    print(dataset_path)
+    dataset = read_dataset(dataset_path)
+    print(dataset)
 
 
 if __name__ == "__main__":
