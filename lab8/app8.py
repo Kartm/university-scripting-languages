@@ -128,10 +128,7 @@ def run():
     if excel_path:
         save_to_excel(excel_path, stats)
     else:
-        print(f"Mean rating: {stats.get('mean_rating')}")
-        print(f"Worst ratings of users: {stats.get('worst_ratings_of_users')}")
         print(f"How many reviews in total: {stats.get('all_reviews_count')}")
-        # print(stats)
 
 
 if __name__ == "__main__":
