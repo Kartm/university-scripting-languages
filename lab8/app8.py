@@ -1,21 +1,25 @@
 import csv
 import argparse
 import sys
-
-# https://www.kaggle.com/rdoume/beerreviews
-from collections import defaultdict
+import openpyxl
 from typing import List
 
-parser = argparse.ArgumentParser()
+# https://www.kaggle.com/rdoume/beerreviews
+
+parser = argparse.ArgumentParser(
+    description="Program for analyzing beer reviews",
+    add_help=True
+)
 parser.add_argument(
     "path",
     help="dataset path",
 )
+parser.add_argument("-o", "--output",
+                    help="name of excel file to be generated",
+                    )
 
 
-def get_dataset_path():
-    args = parser.parse_args()
-
+def get_dataset_path(args):
     path = args.path
     if len(path) > 1:
         if path.endswith(".csv"):
@@ -70,11 +74,12 @@ def read_dataset(path: str):
         sys.exit(0)
 
 
-def print_stats(reviews: List[BeerReview]):
-    mean_rating = sum(review.review_overall for review in reviews)/len(reviews)
-    print(f"Mean rating: {mean_rating}\n")
+def get_stats(reviews: List[BeerReview]):
+    stats = dict()
 
-    # worst rating by profile
+    mean_rating = sum(review.review_overall for review in reviews) / len(reviews)
+    stats['mean_rating'] = mean_rating
+
     worst_ratings_of_users = dict()
     for review in reviews:
         if worst_ratings_of_users.get(review.review_profilename):
@@ -85,15 +90,48 @@ def print_stats(reviews: List[BeerReview]):
         else:
             worst_ratings_of_users[review.review_profilename] = review.review_overall
 
-    print(f"Worst ratings of users: {worst_ratings_of_users}\n")
+    stats['worst_ratings_of_users'] = worst_ratings_of_users
+    stats['all_reviews_count'] = len(reviews)
 
-    print(f"All reviews: {len(reviews)}\n")
+    return stats
+
+
+def save_to_excel(excel_path, stats):
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Beer reviews analysis"
+
+    f = openpyxl.styles.Font(color="FFD700", italic=True, bold=True)
+
+    sheet.cell(row=2, column=2, value="Mean rating")
+    sheet.cell(row=3, column=2, value="Worst ratings of users")
+    sheet.cell(row=4, column=2, value="How many reviews in total")
+
+    sheet.cell(row=2, column=3, value=stats.get('mean_rating')).font = f
+    sheet.cell(row=3, column=3, value=str(stats.get('worst_ratings_of_users'))).font = f
+    sheet.cell(row=4, column=3, value=stats.get('all_reviews_count')).font = f
+
+    workbook.save(excel_path)
+
 
 def run():
-    dataset_path = get_dataset_path()
-    dataset = read_dataset(dataset_path)
-    print_stats(dataset)
+    args = parser.parse_args()
+
+    dataset_path = get_dataset_path(args)
+    excel_path = args.output
+
+    reviews = read_dataset(dataset_path)
+    # print_stats(dataset)
     # print(dataset)
+
+    stats = get_stats(reviews)
+    if excel_path:
+        save_to_excel(excel_path, stats)
+    else:
+        print(f"Mean rating: {stats.get('mean_rating')}")
+        print(f"Worst ratings of users: {stats.get('worst_ratings_of_users')}")
+        print(f"How many reviews in total: {stats.get('all_reviews_count')}")
+        # print(stats)
 
 
 if __name__ == "__main__":
