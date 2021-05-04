@@ -1,11 +1,21 @@
 import csv
+import argparse
 import sys
 
-
 # https://www.kaggle.com/rdoume/beerreviews
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "path",
+    help="dataset path",
+)
+
+
 def get_dataset_path():
-    if len(sys.argv) > 1:
-        path = sys.argv[1]
+    args = parser.parse_args()
+
+    path = args.path
+    if len(path) > 1:
         if path.endswith(".csv"):
             return path
         print("Dataset path must end with \".csv\".")
@@ -14,9 +24,34 @@ def get_dataset_path():
     sys.exit(0)
 
 
+class BeerReview:
+    def __init__(self, brewery_name):
+        self.brewery_name = brewery_name
+
+    def __str__(self):
+        return f"{self.brewery_name}"
+
+    def __repr__(self):
+        return f"{self.brewery_name}"
+
+
 def read_csv_file(path: str):
+    i = 0
+
+    rows = []
     with open(path) as f:
-        return csv.reader(f, delimiter=' ', quotechar='|')
+        reader = csv.reader(f)
+        next(reader)  # skip header
+
+        for row in reader:
+            print(row[1])
+            rows.append(BeerReview(brewery_name=row[1]))
+
+            i += 1
+            if i == 10:
+                break
+
+    return rows
 
 
 def read_dataset(path: str):
@@ -30,7 +65,7 @@ def read_dataset(path: str):
 def run():
     dataset_path = get_dataset_path()
     dataset = read_dataset(dataset_path)
-    print(dataset)
+    # print(dataset)
 
 
 if __name__ == "__main__":
