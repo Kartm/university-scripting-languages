@@ -31,17 +31,20 @@ def get_dataset_path(args):
 
 
 class BeerReview:
-    def __init__(self, brewery_name, review_overall, review_profilename, beer_style):
+    def __init__(self, brewery_name, review_overall,
+                 review_profilename, beer_style):
         self.brewery_name = brewery_name
         self.review_overall = review_overall
         self.review_profilename = review_profilename
         self.beer_style = beer_style
 
     def __str__(self):
-        return f"{self.brewery_name}'s {self.beer_style} was rated {self.review_overall} by {self.review_profilename}"
+        return f"{self.brewery_name}'s {self.beer_style} " \
+               f"was rated {self.review_overall} by {self.review_profilename}"
 
     def __repr__(self):
-        return f"{self.brewery_name}'s {self.beer_style} was rated {self.review_overall} by {self.review_profilename}"
+        return f"{self.brewery_name}'s {self.beer_style} " \
+               f"was rated {self.review_overall} by {self.review_profilename}"
 
 
 def read_csv_file(path: str):
@@ -77,7 +80,8 @@ def read_dataset(path: str):
 def get_stats(reviews: List[BeerReview]):
     stats = dict()
 
-    mean_rating = sum(review.review_overall for review in reviews) / len(reviews)
+    mean_rating = sum(review.review_overall
+                      for review in reviews) / len(reviews)
     stats['mean_rating'] = mean_rating
 
     worst_ratings_of_users = dict()
@@ -88,7 +92,8 @@ def get_stats(reviews: List[BeerReview]):
                 worst_ratings_of_users.get(review.review_profilename)
             )
         else:
-            worst_ratings_of_users[review.review_profilename] = review.review_overall
+            worst_ratings_of_users[review.review_profilename] \
+                = review.review_overall
 
     stats['worst_ratings_of_users'] = worst_ratings_of_users
     stats['all_reviews_count'] = len(reviews)
@@ -108,7 +113,8 @@ def save_to_excel(excel_path, stats):
     sheet.cell(row=4, column=2, value="How many reviews in total")
 
     sheet.cell(row=2, column=3, value=stats.get('mean_rating')).font = f
-    sheet.cell(row=3, column=3, value=str(stats.get('worst_ratings_of_users'))).font = f
+    sheet.cell(row=3, column=3, value=str(
+        stats.get('worst_ratings_of_users'))).font = f
     sheet.cell(row=4, column=3, value=stats.get('all_reviews_count')).font = f
 
     workbook.save(excel_path)
