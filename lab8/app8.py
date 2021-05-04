@@ -3,6 +3,8 @@ import argparse
 import sys
 
 # https://www.kaggle.com/rdoume/beerreviews
+from collections import defaultdict
+from typing import List
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -25,14 +27,17 @@ def get_dataset_path():
 
 
 class BeerReview:
-    def __init__(self, brewery_name):
+    def __init__(self, brewery_name, review_overall, review_profilename, beer_style):
         self.brewery_name = brewery_name
+        self.review_overall = review_overall
+        self.review_profilename = review_profilename
+        self.beer_style = beer_style
 
     def __str__(self):
-        return f"{self.brewery_name}"
+        return f"{self.brewery_name}'s {self.beer_style} was rated {self.review_overall} by {self.review_profilename}"
 
     def __repr__(self):
-        return f"{self.brewery_name}"
+        return f"{self.brewery_name}'s {self.beer_style} was rated {self.review_overall} by {self.review_profilename}"
 
 
 def read_csv_file(path: str):
@@ -44,11 +49,14 @@ def read_csv_file(path: str):
         next(reader)  # skip header
 
         for row in reader:
-            print(row[1])
-            rows.append(BeerReview(brewery_name=row[1]))
+            rows.append(BeerReview(brewery_name=row[1],
+                                   review_overall=float(row[3]),
+                                   review_profilename=row[6],
+                                   beer_style=row[7]
+                                   ))
 
             i += 1
-            if i == 10:
+            if i == 100:
                 break
 
     return rows
@@ -62,9 +70,29 @@ def read_dataset(path: str):
         sys.exit(0)
 
 
+def print_stats(reviews: List[BeerReview]):
+    mean_rating = sum(review.review_overall for review in reviews)/len(reviews)
+    print(f"Mean rating: {mean_rating}\n")
+
+    # worst rating by profile
+    worst_ratings_of_users = dict()
+    for review in reviews:
+        if worst_ratings_of_users.get(review.review_profilename):
+            worst_ratings_of_users[review.review_profilename] = min(
+                review.review_overall,
+                worst_ratings_of_users.get(review.review_profilename)
+            )
+        else:
+            worst_ratings_of_users[review.review_profilename] = review.review_overall
+
+    print(f"Worst ratings of users: {worst_ratings_of_users}\n")
+
+    print(f"All reviews: {len(reviews)}\n")
+
 def run():
     dataset_path = get_dataset_path()
     dataset = read_dataset(dataset_path)
+    print_stats(dataset)
     # print(dataset)
 
 
