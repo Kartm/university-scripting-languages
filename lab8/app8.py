@@ -48,8 +48,6 @@ class BeerReview:
 
 
 def read_csv_file(path: str):
-    i = 0
-
     rows = []
     with open(path) as f:
         reader = csv.reader(f)
@@ -61,10 +59,6 @@ def read_csv_file(path: str):
                                    review_profilename=row[6],
                                    beer_style=row[7]
                                    ))
-
-            i += 1
-            if i == 100:
-                break
 
     return rows
 
