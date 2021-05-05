@@ -22,7 +22,7 @@ def read_config():
         sys.exit(0)
 
 
-def send_mail(mail_message):
+def send_mail(mail_message, config):
     pass
 
 
@@ -40,7 +40,7 @@ def run():
 
     mail_message = args.mail
     if mail_message:
-        send_mail(mail_message)
+        send_mail(mail_message, config)
 
     cat_facts = args.cat_facts
     if cat_facts:
