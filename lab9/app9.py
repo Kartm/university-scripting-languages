@@ -1,6 +1,8 @@
 import argparse
 import json
 import sys
+import smtplib
+from datetime import datetime
 
 import bs4
 import requests
@@ -26,6 +28,28 @@ def read_config():
 
 
 def send_mail(mail_message, config):
+    smtpSrv = smtplib.SMTP('mail.pwr.wroc.pl', 587)
+    print(config)
+
+    smtpSrv.starttls()
+    print("Logging in...")
+    login = config.get('mail_login')
+    password = config.get('mail_password')
+    login_status = smtpSrv.login(login, password)
+    print(f"Logged in. {login_status}")
+
+    print(config)
+    sender = login
+    to = 'lblachnicki@gmail.com'
+
+    subject = "Laboratory 9 message"
+    footer = f"{datetime.now().strftime('%H:%M:%S, %d/%m/%Y')}"
+    message = f'Subject: {subject}\n{mail_message}\n{footer}'
+
+    result = smtpSrv.sendmail(sender, to, message)
+    print(result)
+    smtpSrv.quit()
+
     pass
 
 
