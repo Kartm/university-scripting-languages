@@ -1,6 +1,8 @@
 import argparse
 import json
 import sys
+
+import bs4
 import requests
 from json import JSONDecodeError
 
@@ -38,6 +40,22 @@ def print_cat_facts(count):
 
 
 def print_teachers(prefix):
+    r = requests.get(f'https://wiz.pwr.edu.pl/pracownicy?letter={prefix}')
+    r.raise_for_status()
+
+    content = bs4.BeautifulSoup(r.text, 'html.parser')
+
+    print(f"The list of researchers - {prefix}")
+    people_tiles = content.select('.column-content .news-box .col-text.text-content')
+
+    if len(people_tiles) == 0:
+        print("<no results>")
+
+    for person in people_tiles:
+        name = person.select("a.title")[0].text
+        email = person.select("p")[0].text
+        print(f"{name} ({email})")
+
     pass
 
 
