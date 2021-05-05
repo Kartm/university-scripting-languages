@@ -1,9 +1,25 @@
 import argparse
+import json
+import sys
+from json import JSONDecodeError
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--mail")
 parser.add_argument("-c", "--cat-facts")
 parser.add_argument("-t", "--teachers")
+
+
+def read_config():
+    try:
+        with open('private.json') as f:
+            config_dict = json.load(f)
+            return config_dict
+    except FileNotFoundError:
+        print('Error: Config file not found.')
+        sys.exit(0)
+    except JSONDecodeError:
+        print('Error: Invalid JSON.')
+        sys.exit(0)
 
 
 def send_mail(mail_message):
@@ -20,6 +36,7 @@ def print_teachers(teacher_last_name_prefix):
 
 def run():
     args = parser.parse_args()
+    config = read_config()
 
     mail_message = args.mail
     if mail_message:
