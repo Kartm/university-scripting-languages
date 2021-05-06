@@ -41,7 +41,8 @@ def send_mail(mail_message, config):
     to = 'lblachnicki@gmail.com'
 
     subject = f"Hello! {datetime.now().strftime('%H:%M:%S, %d/%m/%Y')}"
-    message = f'Subject: {subject}\n{mail_message}'
+    header = 'To:' + to + '\n' + 'From: ' + sender + '\n';
+    message = f'{header}Subject: {subject}\n{mail_message}'
 
     result = smtpSrv.sendmail(sender, to, message)
     print(f"Errors: {result}")
