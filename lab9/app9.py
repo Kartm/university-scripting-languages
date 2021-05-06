@@ -28,8 +28,7 @@ def read_config():
 
 
 def send_mail(mail_message, config):
-    smtpSrv = smtplib.SMTP('mail.pwr.wroc.pl', 587)
-    print(config)
+    smtpSrv = smtplib.SMTP('smtp.gmail.com', 587)
 
     smtpSrv.starttls()
     print("Logging in...")
@@ -38,16 +37,14 @@ def send_mail(mail_message, config):
     login_status = smtpSrv.login(login, password)
     print(f"Logged in. {login_status}")
 
-    print(config)
     sender = login
     to = 'lblachnicki@gmail.com'
 
-    subject = "Laboratory 9 message"
-    footer = f"{datetime.now().strftime('%H:%M:%S, %d/%m/%Y')}"
-    message = f'Subject: {subject}\n{mail_message}\n{footer}'
+    subject = f"Hello! {datetime.now().strftime('%H:%M:%S, %d/%m/%Y')}"
+    message = f'Subject: {subject}\n{mail_message}'
 
     result = smtpSrv.sendmail(sender, to, message)
-    print(result)
+    print(f"Errors: {result}")
     smtpSrv.quit()
 
     pass
