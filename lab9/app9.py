@@ -38,7 +38,7 @@ def send_mail(mail_message, config):
     print(f"Logged in. {login_status}")
 
     sender = login
-    to = 'lblachnicki@gmail.com'
+    to = 'bogumila.hnatkowska@pwr.edu.pl'
 
     subject = f"Hello! {datetime.now().strftime('%H:%M:%S, %d/%m/%Y')}"
     header = 'To:' + to + '\n' + 'From: ' + sender + '\n';
@@ -56,8 +56,13 @@ def print_cat_facts(count):
 
     if r.status_code == 200:
         print(f"{count} cat facts:")
-        for x in r.json():
-            print(f"{x.get('text')}")
+        response = r.json()
+
+        if type(response) == list:
+            for x in r.json():
+                print(f"{x.get('text')}")
+        elif type(response) == dict:
+            print(f"{response.get('text')}")
     pass
 
 
