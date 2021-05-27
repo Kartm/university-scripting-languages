@@ -34,7 +34,7 @@ class TestLab10:
         assert instance.protocol_type == protocol_type
 
     @pytest.mark.parametrize("request_str",
-                             ["GET /", "POST HTTP1.1", "", "  ", "GET  /    HTTP1.1"])
+                             ["GET /", "POST HTTP1.1", "", "   ", "  ",  "GET  /    HTTP1.1"])
     def test_5(self, request_str):
         instance = app10.reqstr2obj(request_str)
 
