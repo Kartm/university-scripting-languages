@@ -1,10 +1,25 @@
+import io
 import math
 import re
+from io import BytesIO
+
 import matplotlib.pyplot as plt
 import numpy
 import requests
-from matplotlib.figure import Figure
 from PIL import Image
+import docx
+
+
+# book downloaded from https://www.gutenberg.org/files/52466/52466-h/52466-h.htm
+
+class ChapterStats:
+    def __init__(self, paragraphs):
+        self.paragraphs_count = len(paragraphs)
+        self.words_count = sum([len(p.split()) for p in paragraphs])
+        self.min_words = min([len(p.split()) for p in paragraphs])
+        self.max_words = max([len(p.split()) for p in paragraphs])
+        self.avg_words = self.words_count / self.paragraphs_count
+
 
 def read_file(path: str):
     with open(path) as f:
@@ -35,7 +50,7 @@ def get_paragraphs_from_lines(chapter_lines):
     return paragraphs
 
 
-def get_paragraph_plot(paragraphs) -> Figure:
+def get_paragraph_data(paragraphs) -> (BytesIO, ChapterStats):
     def round_to_10(x):
         return int(math.ceil(x / 10.0)) * 10
 
@@ -47,16 +62,15 @@ def get_paragraph_plot(paragraphs) -> Figure:
     plt.hist(paragraphs_word_count, bins=numpy.arange(0, 530, 10))
     plt.xlabel('No. of words')
     plt.ylabel('No. of paragraphs')
-    plt.title('Paragraph word count distribution')
-    plt.show()
+    plt.title('Chapter I - paragraph word count distribution')
 
-    fig = plt.figure(figsize=(4, 5))
-    print(fig)
-    plt.close()
+    stream = io.BytesIO()
+    plt.savefig(stream, format='png')
+    stream.seek(0)
 
-    # todo pass these stats to word document
+    stats = ChapterStats(paragraphs)
 
-    return fig
+    return stream, stats
 
 
 def download_image() -> Image:
@@ -82,24 +96,61 @@ def load_local_image() -> Image:
     return rotated_image
 
 
-def combine_pictures(bottom_image, top_image):
+def get_combined_pictures_stream(bottom_image, top_image) -> BytesIO:
     combined_picture = bottom_image.copy()
     combined_picture.paste(top_image, box=(100, 300), mask=top_image.convert("RGBA"))
 
-    return combined_picture
+    stream = io.BytesIO()
+    stream.seek(0)
+    combined_picture.save(stream, format="PNG")
+    return stream
 
 
-def make_word_document(title, author, picture, paragraph_plot):
-    # todo title page
-    # todo chart page
-    pass
+def make_word_document(title, author, picture_stream: BytesIO, paragraph_plot_stream: BytesIO,
+                       chapter_stats: ChapterStats):
+    doc = docx.Document()
+
+    doc.add_paragraph(title, 'Title')
+    doc.add_picture(picture_stream)
+    doc.add_paragraph(author, 'Subtitle')
+    doc.add_paragraph('Report author: Łukasz Blachnicki', 'Caption').bold = True
+
+    doc.add_page_break()
+
+    doc.add_paragraph('Content analysis', 'Title')
+    doc.add_picture(paragraph_plot_stream)
+
+    doc.add_paragraph('The chart shows the distribution of words count in paragraphs of Chapter I. Basic metrics of '
+                      'the first '
+                      'chapter:')
+    doc.add_paragraph(
+        f'Number of paragraphs: {chapter_stats.paragraphs_count}', style='List Bullet'
+    )
+    doc.add_paragraph(
+        f'Number of words: {chapter_stats.words_count}', style='List Bullet'
+    )
+    doc.add_paragraph(
+        f'Minimal number of words in a paragraph: {chapter_stats.min_words}', style='List Bullet'
+    )
+    doc.add_paragraph(
+        f'Maximal number of words in a paragraph: {chapter_stats.max_words}', style='List Bullet'
+    )
+    doc.add_paragraph(
+        f'Average number of words in a paragraph: {chapter_stats.avg_words}', style='List Bullet'
+    )
+
+    doc.add_paragraph(
+        'Book source: https://www.gutenberg.org/files/52466/52466-h/52466-h.htm'
+    )
+
+    doc.save('document.docx')
 
 
 def run():
     title, author, chapter_lines = parse_book(read_file("./52466-0.txt"))
-    paragraph_plot = get_paragraph_plot(get_paragraphs_from_lines(chapter_lines))
-    picture = combine_pictures(download_image(), load_local_image())
-    make_word_document(title, author, picture, paragraph_plot)
+    plot_stream, stats = get_paragraph_data(get_paragraphs_from_lines(chapter_lines))
+    picture_stream = get_combined_pictures_stream(download_image(), load_local_image())
+    make_word_document(title, author, picture_stream, plot_stream, stats)
 
 
 if __name__ == "__main__":
