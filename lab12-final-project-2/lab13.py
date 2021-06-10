@@ -138,19 +138,18 @@ class Application(tk.Frame):
 class Plot(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master, bg='blue')
-        fig = plt.Figure(figsize=(6, 5), dpi=100)
-        self.ax1 = fig.add_subplot(111)
+        self.fig = plt.Figure(figsize=(6, 5), dpi=100)
+        self.ax1 = self.fig.add_subplot(111)
 
         self.ax1.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m'))
-        fig.autofmt_xdate()
+        self.fig.autofmt_xdate()
 
         plt.gcf().autofmt_xdate()
 
         self.ax1.set_title('BTC Price')
-        self.ax1.set_xlabel('time')
         self.ax1.set_ylabel('Price in $')
 
-        self.canvas = FigureCanvasTkAgg(fig, self.master)
+        self.canvas = FigureCanvasTkAgg(self.fig, self.master)
         self.canvas.get_tk_widget().grid(row=0, column=0)
 
 
@@ -168,7 +167,6 @@ class Plot(tk.Frame):
         x_plot = [datetime.strptime(x[0], '%Y-%m-%d') for x in rows]
         y_plot = [x[1] for x in rows]
 
-        self.ax1.clear()
         self.ax1.plot(x_plot, y_plot)
         self.canvas.draw()
 
