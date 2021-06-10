@@ -1,14 +1,29 @@
-import time
-import tkinter as tk
+import json
 import sqlite3
+import tkinter as tk
+import urllib.request
 from datetime import date, timedelta, datetime
-from time import strptime
 
 import matplotlib.pyplot as plt
-import urllib.request, json
-
 from matplotlib import dates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+
+def confirmation_dialog_result(cursor: sqlite3.Cursor):
+    cursor.execute("""
+                        SELECT count(*) FROM sqlite_master WHERE type='table' AND name='prices';
+                    """)
+
+    cache_exists = cursor.fetchall()[0][0] == 1
+
+    if cache_exists:
+        answer = tk.messagebox.askyesno(
+            message="This will override the cache. Continue?")
+
+        if not answer:
+            return False
+
+    return True
 
 
 class Application(tk.Frame):
@@ -86,7 +101,7 @@ class Application(tk.Frame):
 
         url_params = f"?start={start}&end={end}"
 
-        if not self.confirmation_dialog_result(cursor):
+        if not confirmation_dialog_result(cursor):
             return
 
         with urllib.request.urlopen(f"http://api.coindesk.com/v1/bpi/historical/close.json{url_params}") as url:
@@ -110,22 +125,6 @@ class Application(tk.Frame):
             """, data_to_insert)
 
             self.db_conn.commit()
-
-    def confirmation_dialog_result(self, cursor: sqlite3.Cursor):
-        cursor.execute("""
-                            SELECT count(*) FROM sqlite_master WHERE type='table' AND name='prices';
-                        """)
-
-        cache_exists = cursor.fetchall()[0][0] == 1
-
-        if cache_exists:
-            answer = tk.messagebox.askyesno(
-                message="This will override the cache. Continue?")
-
-            if not answer:
-                return False
-
-        return True
 
 
 class Plot(tk.Frame):
