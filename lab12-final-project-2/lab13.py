@@ -47,7 +47,7 @@ class Application(tk.Frame):
         self.plot.grid(row=0, column=0, sticky=tk.NSEW)
 
 
-        actions_frame = tk.Frame(self.master, borderwidth=1, bd=1, relief=tk.SOLID, bg='yellow')
+        actions_frame = tk.Frame(self.master, borderwidth=1, bd=1, relief=tk.SOLID)
         actions_frame.grid(row=1, columnspan=2, column=0, sticky="we")
 
         self.fetch_button = tk.Button(actions_frame)
@@ -59,7 +59,7 @@ class Application(tk.Frame):
         self.clear_button["text"] = "Clear cache"
         self.clear_button["command"] = self.on_clear_button
 
-        settings_frame = tk.Frame(actions_frame, bg='green')
+        settings_frame = tk.Frame(actions_frame)
 
         self.label = tk.Label(settings_frame, text='How many past days of data:')
         self.label.grid(column=0, row=0, sticky='w')
@@ -137,7 +137,7 @@ class Application(tk.Frame):
 
 class Plot(tk.Frame):
     def __init__(self, master):
-        tk.Frame.__init__(self, master, bg='blue')
+        tk.Frame.__init__(self, master)
         self.fig = plt.Figure(figsize=(6, 5), dpi=100)
         self.ax1 = self.fig.add_subplot(111)
 
@@ -175,7 +175,7 @@ class Stats(tk.Frame):
     _header_text = "Basic statistics"
 
     def __init__(self, master):
-        tk.Frame.__init__(self, master, bg='red')
+        tk.Frame.__init__(self, master)
 
         self.variable = tk.StringVar()
         self.label = tk.Label(self,
