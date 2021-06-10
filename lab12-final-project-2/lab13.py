@@ -35,6 +35,11 @@ class Application(tk.Frame):
         self.fetch_button["command"] = self.on_fetch_button
         self.fetch_button.grid(padx=(16, 16), pady=(16, 16), sticky="e")
 
+        self.clear_button = tk.Button(actions_frame)
+        self.clear_button["text"] = "Clear cache"
+        self.clear_button["command"] = self.on_clear_button
+        self.clear_button.grid(padx=(16, 16), pady=(16, 16), sticky="e")
+
         settings_frame = tk.Frame(actions_frame)
 
         self.label = tk.Label(settings_frame, text='How many past days of data:')
@@ -66,12 +71,33 @@ class Application(tk.Frame):
         self.plot.refresh(cursor)
         self.stats.refresh(cursor)
 
+    def on_clear_button(self):
+        self.status_bar.variable.set(f"Status: Cleared the cache.")
+
+        cursor = self.db_conn.cursor()
+        cursor.execute("""
+                        DROP table IF EXISTS prices;
+                    """)
+
     def download_data(self, cursor: sqlite3.Cursor, past_days: int):
         today = date.today()
         end = today.strftime("%Y-%m-%d")
         start = (today - timedelta(days=past_days)).strftime("%Y-%m-%d")
 
         url_params = f"?start={start}&end={end}"
+
+        cursor.execute("""
+                    SELECT count(*) FROM sqlite_master WHERE type='table' AND name='prices';
+                """)
+
+        cache_exists = cursor.fetchall()[0][0] == 1
+
+        if cache_exists:
+            answer = tk.messagebox.askyesno(
+                message="This will override the cache. Continue?")
+
+            if not answer:
+                return
 
         with urllib.request.urlopen(f"http://api.coindesk.com/v1/bpi/historical/close.json{url_params}") as url:
             data = json.loads(url.read().decode())
