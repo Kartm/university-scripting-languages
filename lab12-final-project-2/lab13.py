@@ -11,8 +11,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def confirmation_dialog_result(cursor: sqlite3.Cursor):
     cursor.execute("""
-                        SELECT count(*) FROM sqlite_master WHERE type='table' AND name='prices';
-                    """)
+        SELECT count(*) FROM sqlite_master WHERE type='table' AND name='prices';
+    """)
 
     cache_exists = cursor.fetchall()[0][0] == 1
 
@@ -91,8 +91,8 @@ class Application(tk.Frame):
 
         cursor = self.db_conn.cursor()
         cursor.execute("""
-                        DROP table IF EXISTS prices;
-                    """)
+            DROP table IF EXISTS prices;
+        """)
 
     def download_data(self, cursor: sqlite3.Cursor, past_days: int):
         today = date.today()
@@ -114,14 +114,14 @@ class Application(tk.Frame):
             """)
 
             cursor.execute("""
-                            CREATE TABLE IF NOT EXISTS prices(
-                            close_date VARCHAR(255) PRIMARY KEY,
-                            usd_price FLOAT
-                            );
-                            """)
+                CREATE TABLE IF NOT EXISTS prices(
+                close_date VARCHAR(255) PRIMARY KEY,
+                usd_price FLOAT
+                );
+            """)
 
             cursor.executemany("""
-            INSERT INTO prices VALUES(?, ?);
+                INSERT INTO prices VALUES(?, ?);
             """, data_to_insert)
 
             self.db_conn.commit()
@@ -177,13 +177,13 @@ class Stats(tk.Frame):
 
     def refresh(self, cursor: sqlite3.Cursor):
         cursor.execute("""
-                        SELECT
-                            round(min(usd_price), 2) lowest_price,
-                            round(max(usd_price), 2) highest_price,
-                            round(avg(usd_price), 2) avg_price
-                        FROM
-                            prices
-                    """)
+            SELECT
+                round(min(usd_price), 2) lowest_price,
+                round(max(usd_price), 2) highest_price,
+                round(avg(usd_price), 2) avg_price
+            FROM
+                prices
+        """)
 
         rows = cursor.fetchall()
 
@@ -211,14 +211,6 @@ class StatusBar(tk.Frame):
 
 def run():
     conn = sqlite3.connect(":memory:")
-    cursor = conn.cursor()
-    # cursor.execute("""
-    #             CREATE TABLE IF NOT EXISTS prices(
-    #             close_date VARCHAR(255) PRIMARY KEY,
-    #             usd_price FLOAT
-    #             );
-    #             """)
-    # conn.commit()
 
     gui = tk.Tk()
     gui.geometry("1200x600")
