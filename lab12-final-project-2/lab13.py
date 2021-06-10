@@ -1,10 +1,12 @@
 import tkinter as tk
 import sqlite3
 from datetime import date, timedelta
+from time import strptime
 
 import matplotlib.pyplot as plt
 import urllib.request, json
 
+from matplotlib import dates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
@@ -20,27 +22,20 @@ class Application(tk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-
-
-        self.textWidget2 = tk.Text(self.master)
-        self.textWidget2.insert(tk.END, "Aggregation")
-        self.textWidget2.configure(state='disabled')
-        self.textWidget2.grid(row=0, column=1, sticky="nw")
-
+        self.stats = Stats(self.master)
         self.status_bar = StatusBar(self.master)
 
-        plt.xlabel('X axis')
-        plt.ylabel('Y axis')
-        plt.title('My chart')
+        fig = plt.Figure(figsize=(6, 5), dpi=100)
+        self.ax1 = fig.add_subplot(111)
 
-        figure1 = plt.Figure(figsize=(6, 5), dpi=100)
-        ax1 = figure1.add_subplot(111)
+        # self.ax1.plot([1, 2, 3])
+        # self.ax1.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m'))
+        # figure1.autofmt_xdate()
 
-        ax1.plot([1, 2, 3])
-        ax1.set_title('BTC Price')
+        self.ax1.set_title('BTC Price')
 
-        bar1 = FigureCanvasTkAgg(figure1, self.master)
-        bar1.get_tk_widget().grid(row=0, column=0, sticky="ne")
+        self.canvas = FigureCanvasTkAgg(fig, self.master)
+        self.canvas.get_tk_widget().grid(row=0, column=0, sticky="ne")
 
         actions_frame = tk.Frame(self.master, borderwidth=1, bd=1, relief=tk.SOLID)
         actions_frame.grid(row=1, columnspan=2, column=0, sticky="we")
@@ -87,12 +82,69 @@ class Application(tk.Frame):
             data_to_insert = [(close_date, data['bpi'][close_date]) for close_date in data['bpi']]
             print(data_to_insert)
 
+            cursor.execute("""
+                DROP table IF EXISTS prices;
+            """)
+
+            cursor.execute("""
+                            CREATE TABLE IF NOT EXISTS prices(
+                            close_date VARCHAR(255) PRIMARY KEY,
+                            usd_price FLOAT
+                            );
+                            """)
+
             cursor.executemany("""
             INSERT INTO prices VALUES(?, ?);
             """, data_to_insert)
 
             self.db_conn.commit()
 
+            dates_plot = [strptime(x[0], '%Y-%m-%d') for x in data_to_insert]
+
+            print(dates_plot)
+
+            print(dates.date2num(dates_plot))
+
+
+            self.ax1.clear()
+            self.ax1.plot(dates_plot, [x[1] for x in data_to_insert])
+            self.canvas.draw()
+
+            cursor.execute("""
+                SELECT
+                    round(min(usd_price), 2) lowest_price,
+                    round(max(usd_price), 2) highest_price,
+                    round(avg(usd_price), 2) avg_price
+                FROM
+                    prices
+            """)
+
+            rows = cursor.fetchall()
+
+            for row in rows:
+                print(row)
+
+            price_min = rows[0][0]
+            price_max = rows[0][1]
+            price_avg = rows[0][2]
+            self.stats.variable.set(f"Basic statistics:"
+                                    f"\nLowest price: {price_min}$"
+                                    f"\nHighest price: {price_max}$"
+                                    f"\nAverage price: {price_avg}$")
+
+
+
+
+class Stats(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+        self.variable = tk.StringVar()
+        self.label = tk.Label(self,
+                              textvariable=self.variable,
+                              font=('arial', 12, 'normal'), padx=8)
+        self.label.grid()
+        self.grid(row=0, column=1, sticky="nw")
+        self.variable.set('Aggregation todo')
 
 
 class StatusBar(tk.Frame):
@@ -111,13 +163,13 @@ class StatusBar(tk.Frame):
 def run():
     conn = sqlite3.connect(":memory:")
     cursor = conn.cursor()
-    cursor.execute("""
-                CREATE TABLE IF NOT EXISTS prices(
-                close_date VARCHAR(255) PRIMARY KEY,
-                usd_price FLOAT
-                );
-                """)
-    conn.commit()
+    # cursor.execute("""
+    #             CREATE TABLE IF NOT EXISTS prices(
+    #             close_date VARCHAR(255) PRIMARY KEY,
+    #             usd_price FLOAT
+    #             );
+    #             """)
+    # conn.commit()
 
     gui = tk.Tk()
     gui.geometry("1200x600")
