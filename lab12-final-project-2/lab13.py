@@ -1,6 +1,6 @@
 import tkinter as tk
 import sqlite3
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from time import strptime
 
 import matplotlib.pyplot as plt
@@ -28,14 +28,17 @@ class Application(tk.Frame):
         fig = plt.Figure(figsize=(6, 5), dpi=100)
         self.ax1 = fig.add_subplot(111)
 
-        # self.ax1.plot([1, 2, 3])
-        # self.ax1.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m'))
-        # figure1.autofmt_xdate()
+        self.ax1.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m'))
+        fig.autofmt_xdate()
+
+        plt.gcf().autofmt_xdate()
 
         self.ax1.set_title('BTC Price')
+        self.ax1.set_xlabel('time')
+        self.ax1.set_ylabel('Price in $')
 
         self.canvas = FigureCanvasTkAgg(fig, self.master)
-        self.canvas.get_tk_widget().grid(row=0, column=0, sticky="ne")
+        self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nw")
 
         actions_frame = tk.Frame(self.master, borderwidth=1, bd=1, relief=tk.SOLID)
         actions_frame.grid(row=1, columnspan=2, column=0, sticky="we")
@@ -75,12 +78,11 @@ class Application(tk.Frame):
         url_params = f"?start={start}&end={end}"
         with urllib.request.urlopen(f"http://api.coindesk.com/v1/bpi/historical/close.json{url_params}") as url:
             data = json.loads(url.read().decode())
-            self.status_bar.variable.set(f"Status: Downloading finished.")
+            self.status_bar.variable.set(f"Status: Downloading {past_days} past days finished.")
 
             cursor = self.db_conn.cursor()
 
             data_to_insert = [(close_date, data['bpi'][close_date]) for close_date in data['bpi']]
-            print(data_to_insert)
 
             cursor.execute("""
                 DROP table IF EXISTS prices;
@@ -99,22 +101,13 @@ class Application(tk.Frame):
 
             self.db_conn.commit()
 
-            dates_plot = [strptime(x[0], '%Y-%m-%d') for x in data_to_insert]
-
-            print(dates_plot)
-
-            print(dates.date2num(dates_plot))
-
+            raw_dates = [datetime.strptime(x[0], '%Y-%m-%d') for x in data_to_insert]
 
             self.ax1.clear()
-            self.ax1.plot(dates_plot, [x[1] for x in data_to_insert])
+            self.ax1.plot(raw_dates, [x[1] for x in data_to_insert])
             self.canvas.draw()
 
             self.stats.refresh(cursor)
-
-
-
-
 
 
 class Stats(tk.Frame):
