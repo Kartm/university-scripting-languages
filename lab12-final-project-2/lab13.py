@@ -46,14 +46,12 @@ class Application(tk.Frame):
         self.plot = Plot(self.master)
         self.plot.grid(row=0, column=0, sticky=tk.NSEW)
 
-
         actions_frame = tk.Frame(self.master, borderwidth=1, bd=1, relief=tk.SOLID)
         actions_frame.grid(row=1, columnspan=2, column=0, sticky="we")
 
         self.fetch_button = tk.Button(actions_frame)
         self.fetch_button["text"] = "Fetch data"
         self.fetch_button["command"] = self.on_fetch_button
-
 
         self.clear_button = tk.Button(actions_frame)
         self.clear_button["text"] = "Clear cache"
@@ -80,19 +78,24 @@ class Application(tk.Frame):
         self.master.grid_columnconfigure(1, weight=1, uniform="group1")
         self.master.grid_rowconfigure(0, weight=1)
 
-
     def on_fetch_button(self):
         past_days = int(self.current_value.get())
 
         self.status_bar.variable.set(f"Status: Downloading past {past_days} days data...")
 
         cursor = self.db_conn.cursor()
-        self.download_data(cursor, past_days)
 
-        self.status_bar.variable.set(f"Status: Downloaded {past_days} past days.")
+        try:
+            self.download_data(cursor, past_days)
 
-        self.plot.refresh(cursor)
-        self.stats.refresh(cursor)
+            self.status_bar.variable.set(f"Status: Downloaded {past_days} past days.")
+
+            self.plot.refresh(cursor)
+            self.stats.refresh(cursor)
+        except urllib.error.URLError as e:
+            self.status_bar.variable.set(f"Status: Error.")
+            tk.messagebox.showinfo(title="Error downloading data:", message=e)
+
 
     def on_clear_button(self):
         self.status_bar.variable.set(f"Status: Cleared the cache.")
@@ -111,6 +114,7 @@ class Application(tk.Frame):
 
         if not confirmation_dialog_result(cursor):
             return
+
 
         with urllib.request.urlopen(f"http://api.coindesk.com/v1/bpi/historical/close.json{url_params}") as url:
             data = json.loads(url.read().decode())
@@ -151,7 +155,6 @@ class Plot(tk.Frame):
 
         self.canvas = FigureCanvasTkAgg(self.fig, self.master)
         self.canvas.get_tk_widget().grid(row=0, column=0)
-
 
     def refresh(self, cursor: sqlite3.Cursor):
         cursor.execute("""
