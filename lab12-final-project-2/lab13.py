@@ -110,27 +110,9 @@ class Application(tk.Frame):
             self.ax1.plot(dates_plot, [x[1] for x in data_to_insert])
             self.canvas.draw()
 
-            cursor.execute("""
-                SELECT
-                    round(min(usd_price), 2) lowest_price,
-                    round(max(usd_price), 2) highest_price,
-                    round(avg(usd_price), 2) avg_price
-                FROM
-                    prices
-            """)
+            self.stats.refresh(cursor)
 
-            rows = cursor.fetchall()
 
-            for row in rows:
-                print(row)
-
-            price_min = rows[0][0]
-            price_max = rows[0][1]
-            price_avg = rows[0][2]
-            self.stats.variable.set(f"Basic statistics:"
-                                    f"\nLowest price: {price_min}$"
-                                    f"\nHighest price: {price_max}$"
-                                    f"\nAverage price: {price_avg}$")
 
 
 
@@ -145,6 +127,26 @@ class Stats(tk.Frame):
         self.label.grid()
         self.grid(row=0, column=1, sticky="nw")
         self.variable.set('Aggregation todo')
+
+    def refresh(self, cursor: sqlite3.Cursor):
+        cursor.execute("""
+                        SELECT
+                            round(min(usd_price), 2) lowest_price,
+                            round(max(usd_price), 2) highest_price,
+                            round(avg(usd_price), 2) avg_price
+                        FROM
+                            prices
+                    """)
+
+        rows = cursor.fetchall()
+
+        price_min = rows[0][0]
+        price_max = rows[0][1]
+        price_avg = rows[0][2]
+        self.variable.set(f"Basic statistics:"
+                                f"\nLowest price: {price_min}$"
+                                f"\nHighest price: {price_max}$"
+                                f"\nAverage price: {price_avg}$")
 
 
 class StatusBar(tk.Frame):
