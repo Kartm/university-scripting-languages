@@ -39,26 +39,30 @@ class Application(tk.Frame):
 
     def create_widgets(self):
         self.stats = Stats(self.master)
-        self.status_bar = StatusBar(self.master)
-        self.plot = Plot(self.master)
+        self.stats.grid(row=0, column=1, sticky=tk.NSEW)
 
-        actions_frame = tk.Frame(self.master, borderwidth=1, bd=1, relief=tk.SOLID)
+        self.status_bar = StatusBar(self.master)
+
+        self.plot = Plot(self.master)
+        self.plot.grid(row=0, column=0, sticky=tk.NSEW)
+
+
+        actions_frame = tk.Frame(self.master, borderwidth=1, bd=1, relief=tk.SOLID, bg='yellow')
         actions_frame.grid(row=1, columnspan=2, column=0, sticky="we")
 
         self.fetch_button = tk.Button(actions_frame)
         self.fetch_button["text"] = "Fetch data"
         self.fetch_button["command"] = self.on_fetch_button
-        self.fetch_button.grid(padx=(16, 16), pady=(16, 16), sticky="e")
+
 
         self.clear_button = tk.Button(actions_frame)
         self.clear_button["text"] = "Clear cache"
         self.clear_button["command"] = self.on_clear_button
-        self.clear_button.grid(padx=(16, 16), pady=(16, 16), sticky="e")
 
-        settings_frame = tk.Frame(actions_frame)
+        settings_frame = tk.Frame(actions_frame, bg='green')
 
         self.label = tk.Label(settings_frame, text='How many past days of data:')
-        self.label.grid(column=0, row=0)
+        self.label.grid(column=0, row=0, sticky='w')
 
         self.spin_box = tk.Spinbox(
             settings_frame,
@@ -68,10 +72,14 @@ class Application(tk.Frame):
             wrap=True)
         self.spin_box.grid(column=0, row=1)
 
-        settings_frame.grid(column=0)
+        self.fetch_button.grid(column=1, row=0, padx=(16, 16), pady=(16, 16), sticky="e")
+        self.clear_button.grid(column=1, row=1, padx=(16, 16), pady=(16, 16), sticky="e")
+        settings_frame.grid(column=0, row=0, rowspan=2, sticky="NESW")
 
+        self.master.grid_columnconfigure(0, weight=1, uniform="group1")
+        self.master.grid_columnconfigure(1, weight=1, uniform="group1")
         self.master.grid_rowconfigure(0, weight=1)
-        self.master.grid_columnconfigure(0, weight=1)
+
 
     def on_fetch_button(self):
         past_days = int(self.current_value.get())
@@ -129,7 +137,7 @@ class Application(tk.Frame):
 
 class Plot(tk.Frame):
     def __init__(self, master):
-        tk.Frame.__init__(self, master)
+        tk.Frame.__init__(self, master, bg='blue')
         fig = plt.Figure(figsize=(6, 5), dpi=100)
         self.ax1 = fig.add_subplot(111)
 
@@ -143,7 +151,8 @@ class Plot(tk.Frame):
         self.ax1.set_ylabel('Price in $')
 
         self.canvas = FigureCanvasTkAgg(fig, self.master)
-        self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nw")
+        self.canvas.get_tk_widget().grid(row=0, column=0)
+
 
     def refresh(self, cursor: sqlite3.Cursor):
         cursor.execute("""
@@ -165,15 +174,18 @@ class Plot(tk.Frame):
 
 
 class Stats(tk.Frame):
+    _header_text = "Basic statistics"
+
     def __init__(self, master):
-        tk.Frame.__init__(self, master)
+        tk.Frame.__init__(self, master, bg='red')
+
         self.variable = tk.StringVar()
         self.label = tk.Label(self,
+                              anchor="e", justify=tk.LEFT,
                               textvariable=self.variable,
                               font=('arial', 12, 'normal'), padx=8)
         self.label.grid()
-        self.grid(row=0, column=1, sticky="nw")
-        self.variable.set('Aggregation todo')
+        self.variable.set(f'{self._header_text}:\nn/a')
 
     def refresh(self, cursor: sqlite3.Cursor):
         cursor.execute("""
@@ -190,7 +202,7 @@ class Stats(tk.Frame):
         price_min = rows[0][0]
         price_max = rows[0][1]
         price_avg = rows[0][2]
-        self.variable.set(f"Basic statistics:"
+        self.variable.set(f"{self._header_text}:"
                           f"\nLowest price: {price_min}$"
                           f"\nHighest price: {price_max}$"
                           f"\nAverage price: {price_avg}$")
