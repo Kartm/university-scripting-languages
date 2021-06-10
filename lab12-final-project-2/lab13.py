@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 import sqlite3
 from datetime import date, timedelta, datetime
@@ -24,21 +25,7 @@ class Application(tk.Frame):
     def create_widgets(self):
         self.stats = Stats(self.master)
         self.status_bar = StatusBar(self.master)
-
-        fig = plt.Figure(figsize=(6, 5), dpi=100)
-        self.ax1 = fig.add_subplot(111)
-
-        self.ax1.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m'))
-        fig.autofmt_xdate()
-
-        plt.gcf().autofmt_xdate()
-
-        self.ax1.set_title('BTC Price')
-        self.ax1.set_xlabel('time')
-        self.ax1.set_ylabel('Price in $')
-
-        self.canvas = FigureCanvasTkAgg(fig, self.master)
-        self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nw")
+        self.plot = Plot(self.master)
 
         actions_frame = tk.Frame(self.master, borderwidth=1, bd=1, relief=tk.SOLID)
         actions_frame.grid(row=1, columnspan=2, column=0, sticky="we")
@@ -71,16 +58,23 @@ class Application(tk.Frame):
 
         self.status_bar.variable.set(f"Status: Downloading past {past_days} days data...")
 
+        cursor = self.db_conn.cursor()
+        self.download_data(cursor, past_days)
+
+        self.status_bar.variable.set(f"Status: Downloaded {past_days} past days.")
+
+        self.plot.refresh(cursor)
+        self.stats.refresh(cursor)
+
+    def download_data(self, cursor: sqlite3.Cursor, past_days: int):
         today = date.today()
         end = today.strftime("%Y-%m-%d")
         start = (today - timedelta(days=past_days)).strftime("%Y-%m-%d")
 
         url_params = f"?start={start}&end={end}"
+
         with urllib.request.urlopen(f"http://api.coindesk.com/v1/bpi/historical/close.json{url_params}") as url:
             data = json.loads(url.read().decode())
-            self.status_bar.variable.set(f"Status: Downloading {past_days} past days finished.")
-
-            cursor = self.db_conn.cursor()
 
             data_to_insert = [(close_date, data['bpi'][close_date]) for close_date in data['bpi']]
 
@@ -101,13 +95,42 @@ class Application(tk.Frame):
 
             self.db_conn.commit()
 
-            raw_dates = [datetime.strptime(x[0], '%Y-%m-%d') for x in data_to_insert]
 
-            self.ax1.clear()
-            self.ax1.plot(raw_dates, [x[1] for x in data_to_insert])
-            self.canvas.draw()
+class Plot(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+        fig = plt.Figure(figsize=(6, 5), dpi=100)
+        self.ax1 = fig.add_subplot(111)
 
-            self.stats.refresh(cursor)
+        self.ax1.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m'))
+        fig.autofmt_xdate()
+
+        plt.gcf().autofmt_xdate()
+
+        self.ax1.set_title('BTC Price')
+        self.ax1.set_xlabel('time')
+        self.ax1.set_ylabel('Price in $')
+
+        self.canvas = FigureCanvasTkAgg(fig, self.master)
+        self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nw")
+
+    def refresh(self, cursor: sqlite3.Cursor):
+        cursor.execute("""
+            SELECT
+                close_date,
+                usd_price
+            FROM
+                prices
+        """)
+
+        rows = cursor.fetchall()
+
+        x_plot = [datetime.strptime(x[0], '%Y-%m-%d') for x in rows]
+        y_plot = [x[1] for x in rows]
+
+        self.ax1.clear()
+        self.ax1.plot(x_plot, y_plot)
+        self.canvas.draw()
 
 
 class Stats(tk.Frame):
@@ -137,9 +160,9 @@ class Stats(tk.Frame):
         price_max = rows[0][1]
         price_avg = rows[0][2]
         self.variable.set(f"Basic statistics:"
-                                f"\nLowest price: {price_min}$"
-                                f"\nHighest price: {price_max}$"
-                                f"\nAverage price: {price_avg}$")
+                          f"\nLowest price: {price_min}$"
+                          f"\nHighest price: {price_max}$"
+                          f"\nAverage price: {price_avg}$")
 
 
 class StatusBar(tk.Frame):
