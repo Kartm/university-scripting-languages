@@ -86,18 +86,8 @@ class Application(tk.Frame):
 
         url_params = f"?start={start}&end={end}"
 
-        cursor.execute("""
-                    SELECT count(*) FROM sqlite_master WHERE type='table' AND name='prices';
-                """)
-
-        cache_exists = cursor.fetchall()[0][0] == 1
-
-        if cache_exists:
-            answer = tk.messagebox.askyesno(
-                message="This will override the cache. Continue?")
-
-            if not answer:
-                return
+        if not self.confirmation_dialog_result(cursor):
+            return
 
         with urllib.request.urlopen(f"http://api.coindesk.com/v1/bpi/historical/close.json{url_params}") as url:
             data = json.loads(url.read().decode())
@@ -120,6 +110,22 @@ class Application(tk.Frame):
             """, data_to_insert)
 
             self.db_conn.commit()
+
+    def confirmation_dialog_result(self, cursor: sqlite3.Cursor):
+        cursor.execute("""
+                            SELECT count(*) FROM sqlite_master WHERE type='table' AND name='prices';
+                        """)
+
+        cache_exists = cursor.fetchall()[0][0] == 1
+
+        if cache_exists:
+            answer = tk.messagebox.askyesno(
+                message="This will override the cache. Continue?")
+
+            if not answer:
+                return False
+
+        return True
 
 
 class Plot(tk.Frame):
